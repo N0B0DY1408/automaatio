@@ -16,7 +16,7 @@ jobs:
           fetch-depth: 0  # tarvitaan tagien tekemiseen
 
       - name: Run tests
-        run: ./home/runner/work/automaatio/automaatio/run_tests.sh
+        run: pwd && ls && ./run_tests.sh
 
       - name: Bump version
         id: bump
