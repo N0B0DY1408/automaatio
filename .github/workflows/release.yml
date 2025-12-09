@@ -16,7 +16,7 @@ jobs:
           fetch-depth: 0  # tarvitaan tagien tekemiseen
 
       - name: Run tests
-        run: ./run_tests.sh
+        run: ././run_tests.sh
 
       - name: Bump version
         id: bump
