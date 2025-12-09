@@ -1,0 +1,51 @@
+name: Auto Release
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # tarvitaan tagien tekemiseen
+
+      - name: Run tests
+        run: ./run_tests.sh
+
+      - name: Bump version
+        id: bump
+        run: |
+          VERSION=$(cat VERSION)
+          echo "Current version: $VERSION"
+
+          # Nosta patch-numero (x.y.z -> x.y.(z+1))
+          NEW_VERSION=$(echo $VERSION | awk -F. '{printf("%d.%d.%d", $1, $2, $3+1)}')
+
+          echo "$NEW_VERSION" > VERSION
+          echo "New version: $NEW_VERSION"
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Commit and push version bump
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+          git add VERSION
+          git commit -m "Release version ${{ steps.bump.outputs.new_version }}" || echo "No changes to commit"
+          git tag "v${{ steps.bump.outputs.new_version }}"
+          git push
+          git push --tags
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: "v${{ steps.bump.outputs.new_version }}"
+          name: "Release v${{ steps.bump.outputs.new_version }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
